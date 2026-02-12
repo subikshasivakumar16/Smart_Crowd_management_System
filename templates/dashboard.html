@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Dashboard - Smart Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        body { background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; }
+        .dashboard-header {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+            color: white;
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-back {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.3); color: white; }
+        .sensor-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 1.25rem;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .sensor-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .sensor-value { font-size: 1.75rem; font-weight: 700; color: #1e293b; }
+        .sensor-label { color: #64748b; font-size: 0.9rem; }
+        .risk-badge {
+            padding: 0.5rem 1.25rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .risk-normal { background: #dcfce7; color: #166534; }
+        .risk-medium { background: #fef3c7; color: #92400e; }
+        .risk-danger { background: #fee2e2; color: #991b1b; }
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            height: 380px;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .chart-scroll { min-height: 320px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+        #sensorChart { height: 320px !important; min-width: 800px; display: block; }
+        .calendar-mini {
+            background: white;
+            border-radius: 12px;
+            padding: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .calendar-mini .date-pick { font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <div class="container-fluid d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <a href="{{ url_for('crowd_dashboard') }}" class="btn-back"><i class="bi bi-arrow-left me-1"></i>Back to Crowd</a>
+            <span class="h5 mb-0"><i class="bi bi-speedometer2 me-2"></i>Environment Monitoring Dashboard</span>
+            <div class="d-flex gap-2">
+                <input type="date" id="report-date" class="form-control form-control-sm" style="max-width:140px;">
+                <a href="#" id="btn-download-report" class="btn btn-light btn-sm"><i class="bi bi-download me-1"></i>Export Report</a>
+                <button class="btn btn-light btn-sm" id="btn-download-chart" title="Download chart"><i class="bi bi-image"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid pb-4">
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="sensor-card">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <div class="sensor-label"><i class="bi bi-thermometer-half me-1"></i>Temperature</div>
+                            <div class="sensor-value" id="temp-val">--</div>
+                            <small class="text-muted">°C</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="sensor-card">
+                    <div class="sensor-label"><i class="bi bi-droplet-half me-1"></i>Humidity</div>
+                    <div class="sensor-value" id="hum-val">--</div>
+                    <small class="text-muted">%</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="sensor-card">
+                    <div class="sensor-label"><i class="bi bi-wind me-1"></i>Oxygen</div>
+                    <div class="sensor-value" id="oxy-val">--</div>
+                    <small class="text-muted">%</small>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="sensor-card">
+                    <div class="sensor-label"><i class="bi bi-volume-up me-1"></i>Sound</div>
+                    <div class="sensor-value" id="sound-val">--</div>
+                    <small class="text-muted">dB</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12 col-lg-8">
+                <div class="chart-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0"><i class="bi bi-graph-up me-1"></i>Sensor History (Scroll for more)</h6>
+                    </div>
+                    <div class="chart-scroll" style="height:320px;">
+                        <canvas id="sensorChart" width="800" height="320"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="sensor-card h-100">
+                    <h6 class="mb-3"><i class="bi bi-shield-exclamation me-1"></i>Risk Level</h6>
+                    <div id="risk-display" class="risk-badge risk-normal">Normal</div>
+                    <p class="mt-3 text-muted small mb-0">Based on LSTM risk prediction model.</p>
+                    <hr>
+                    <div class="calendar-mini mt-3">
+                        <label class="form-label small">Filter by date</label>
+                        <input type="date" id="filter-date" class="form-control form-control-sm date-pick">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="sensor-card">
+                    <h6 class="mb-3"><i class="bi bi-grid-3x3-gap me-1"></i>Zone Summary</h6>
+                    <div class="row g-2" id="zone-summary"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+</body>
+</html>

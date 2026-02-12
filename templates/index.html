@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crowd Dashboard - Smart Monitor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        body { background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; }
+        .navbar {
+            background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%) !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .badge-live { background: #22c55e; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .zone-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .zone-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+        }
+        .video-container {
+            position: relative;
+            background: #0f172a;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+        }
+        .video-container img { width: 100%; height: 100%; object-fit: cover; }
+        .video-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
+        .video-actions .btn {
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            transition: all 0.2s;
+        }
+        .video-actions .btn:hover { background: rgba(37, 99, 235, 0.9); color: white; }
+        .zone-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0,0,0,0.85));
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .density-badge { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .density-low { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        .density-medium { background: #eab308; box-shadow: 0 0 8px #eab308; }
+        .density-high { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+        .btn-env {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-env:hover { background: rgba(255,255,255,0.3); color: white; }
+        .stats-card {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .calendar-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            padding: 1rem;
+        }
+        .calendar-card .date-cell {
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .calendar-card .date-cell:hover { background: #e2e8f0; }
+        .calendar-card .date-cell.has-events { background: #dbeafe; color: #1d4ed8; font-weight: 600; }
+        .calendar-card .date-cell.selected { background: #2563eb; color: white; }
+        .events-panel {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .event-item {
+            padding: 0.5rem;
+            border-left: 4px solid #2563eb;
+            margin-bottom: 0.5rem;
+            background: #f8fafc;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+        }
+        .event-item.risk { border-color: #ef4444; }
+        .event-item.crowd { border-color: #eab308; }
+        .fullscreen-video {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        .fullscreen-video img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .fullscreen-video .close-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255,255,255,0.2); color: white; border: none;
+            width: 48px; height: 48px; border-radius: 50%; font-size: 1.5rem; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#"><i class="bi bi-camera-video me-2"></i>Smart Crowd Monitor</a>
+            <span class="badge badge-live rounded-pill px-3 py-2"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i>LIVE</span>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('env_dashboard') }}" class="btn-env"><i class="bi bi-speedometer2 me-1"></i>Environment</a>
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row mb-4">
+            <div class="col-12 col-lg-3 mb-3">
+                <div class="stats-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="opacity-90">Total Crowd</small>
+                            <h4 class="mb-0" id="total-crowd">0</h4>
+                        </div>
+                        <i class="bi bi-people fs-1 opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6 mb-3">
+                <div class="calendar-card">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0"><i class="bi bi-calendar3 me-1"></i>Event Calendar</h6>
+                        <button class="btn btn-sm btn-outline-primary" id="cal-today">Today</button>
+                    </div>
+                    <div id="calendar-body"></div>
+                    <div class="mt-2">
+                        <small class="text-muted">Select a date to view events</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-3 mb-3">
+                <div class="calendar-card h-100">
+                    <h6 class="mb-2"><i class="bi bi-journal-text me-1"></i>Events <span id="sel-date"></span></h6>
+                    <div class="events-panel" id="events-list">
+                        <p class="text-muted small">Select a date from calendar</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="zone-card">
+                    <div class="video-container" id="container-a">
+                        <div class="video-actions">
+                            <a href="/download/snapshot/A" class="btn btn-sm" title="Download snapshot"><i class="bi bi-camera"></i></a>
+                            <a href="/download/video/A" class="btn btn-sm" title="Download video"><i class="bi bi-download"></i></a>
+                            <button class="btn btn-sm btn-fullscreen" data-zone="A" title="Fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+                        </div>
+                        <img id="video-a" src="{{ url_for('video_feed', zone='A') }}" alt="Zone A">
+                    </div>
+                    <div class="zone-overlay">
+                        <div><span class="density-badge density-low" id="ind-a"></span><span id="density-a">Low</span> &bull; <span id="count-a">0</span> people</div>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="mb-2">Zone A</h6>
+                        <input type="range" class="form-range" id="slider-a" min="0" max="100" value="0" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="zone-card">
+                    <div class="video-container" id="container-b">
+                        <div class="video-actions">
+                            <a href="/download/snapshot/B" class="btn btn-sm" title="Download snapshot"><i class="bi bi-camera"></i></a>
+                            <a href="/download/video/B" class="btn btn-sm" title="Download video"><i class="bi bi-download"></i></a>
+                            <button class="btn btn-sm btn-fullscreen" data-zone="B" title="Fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+                        </div>
+                        <img id="video-b" src="{{ url_for('video_feed', zone='B') }}" alt="Zone B">
+                    </div>
+                    <div class="zone-overlay">
+                        <div><span class="density-badge density-low" id="ind-b"></span><span id="density-b">Low</span> &bull; <span id="count-b">0</span> people</div>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="mb-2">Zone B</h6>
+                        <input type="range" class="form-range" id="slider-b" min="0" max="100" value="0" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="zone-card">
+                    <div class="video-container" id="container-c">
+                        <div class="video-actions">
+                            <a href="/download/snapshot/C" class="btn btn-sm" title="Download snapshot"><i class="bi bi-camera"></i></a>
+                            <a href="/download/video/C" class="btn btn-sm" title="Download video"><i class="bi bi-download"></i></a>
+                            <button class="btn btn-sm btn-fullscreen" data-zone="C" title="Fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+                        </div>
+                        <img id="video-c" src="{{ url_for('video_feed', zone='C') }}" alt="Zone C">
+                    </div>
+                    <div class="zone-overlay">
+                        <div><span class="density-badge density-low" id="ind-c"></span><span id="density-c">Low</span> &bull; <span id="count-c">0</span> people</div>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="mb-2">Zone C</h6>
+                        <input type="range" class="form-range" id="slider-c" min="0" max="100" value="0" disabled>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-3">
+                <div class="zone-card">
+                    <div class="video-container" id="container-d">
+                        <div class="video-actions">
+                            <a href="/download/snapshot/D" class="btn btn-sm" title="Download snapshot"><i class="bi bi-camera"></i></a>
+                            <a href="/download/video/D" class="btn btn-sm" title="Download video"><i class="bi bi-download"></i></a>
+                            <button class="btn btn-sm btn-fullscreen" data-zone="D" title="Fullscreen"><i class="bi bi-arrows-fullscreen"></i></button>
+                        </div>
+                        <img id="video-d" src="{{ url_for('video_feed', zone='D') }}" alt="Zone D">
+                    </div>
+                    <div class="zone-overlay">
+                        <div><span class="density-badge density-low" id="ind-d"></span><span id="density-d">Low</span> &bull; <span id="count-d">0</span> people</div>
+                    </div>
+                    <div class="p-3">
+                        <h6 class="mb-2">Zone D</h6>
+                        <input type="range" class="form-range" id="slider-d" min="0" max="100" value="0" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fullscreen-video" id="fullscreen-modal" style="display:none;">
+        <button class="close-btn" id="close-fullscreen"><i class="bi bi-x-lg"></i></button>
+        <img id="fullscreen-img" src="" alt="">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
