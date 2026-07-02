@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SafeEye Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 to-slate-700 flex flex-col md:flex-row min-h-screen text-gray-800">
+
+<!-- Sidebar -->
+<aside id="sidebar" class="w-full md:w-64 bg-slate-950 text-white p-6 flex flex-col shadow-xl">
+<h1 class="text-2xl font-bold mb-10 text-blue-400">SafeEye</h1>
+<nav class="space-y-3 flex md:flex-col flex-row overflow-x-auto md:overflow-x-visible">
+<a href="#" onclick="showSection('video', this)" class="sidebar-link block p-3 rounded transition hover:bg-blue-600 whitespace-nowrap">📹 Video Feed</a>
+<a href="#" onclick="showSection('history', this)" class="sidebar-link block p-3 rounded transition hover:bg-blue-600 whitespace-nowrap">📜 History</a>
+<a href="#" onclick="showSection('analytics', this)" class="sidebar-link block p-3 rounded transition hover:bg-blue-600 whitespace-nowrap">📊 Analytics</a>
+<a href="#" onclick="showSection('settings', this)" class="sidebar-link block p-3 rounded transition hover:bg-blue-600 whitespace-nowrap">⚙ Settings</a>
+<a href="#" onclick="showSection('profile', this)" class="sidebar-link block p-3 rounded transition hover:bg-blue-600 whitespace-nowrap">👤 Profile</a>
+</nav>
+</aside>
+
+<!-- Main Content -->
+<main class="flex-1 p-4 md:p-8 overflow-y-auto">
+
+<header class="flex items-center w-full mb-6 md:mb-8 px-2 md:px-4">
+
+  <!-- Title -->
+  <h2 class="text-2xl md:text-3xl font-bold text-white">
+    SafeEye Dashboard
+  </h2>
+
+  <!-- Push Admin to right -->
+  <div class="ml-auto bg-white px-4 py-2 rounded shadow">
+    Admin
+  </div>
+
+</header>
+
+<!-- VIDEO FEED -->
+<section id="video" class="section">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  <div class="bg-white/90 backdrop-blur p-6 rounded-xl shadow hover:scale-105 transition">
+    <h3 class="font-bold">Total Crowd</h3>
+    <p class="text-3xl mt-2 text-blue-600" id="totalCrowd">0</p>
+  </div>
+  <div class="bg-white/90 backdrop-blur p-6 rounded-xl shadow hover:scale-105 transition">
+    <h3 class="font-bold">Avg Density</h3>
+    <p class="text-3xl mt-2 text-green-600" id="avgDensity">Medium</p>
+  </div>
+  <div class="bg-white/90 backdrop-blur p-6 rounded-xl shadow hover:scale-105 transition">
+    <h3 class="font-bold">Alerts</h3>
+    <p class="text-3xl mt-2 text-red-600" id="alertsCount">0</p>
+  </div>
+</div>
+
+<div id="cameraGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+  <!-- Camera frames injected dynamically -->
+</div>
+</section>
+
+<!-- HISTORY -->
+<section id="history" class="section hidden">
+<h3 class="text-2xl font-bold mb-4 text-white">Incident History</h3>
+<div class="bg-white rounded-xl shadow p-4 md:p-6">
+<div class="mb-4 flex gap-2 flex-wrap">
+<select id="filterCamera" class="border p-2 rounded">
+  <option value="">All Cameras</option>
+</select>
+<select id="filterType" class="border p-2 rounded">
+  <option value="">All Types</option>
+  <option value="Crowd Surge">Crowd Surge</option>
+  <option value="Unattended Bag">Unattended Bag</option>
+  <option value="Suspicious Activity">Suspicious Activity</option>
+</select>
+<button class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition" onclick="applyFilters()">Filter</button>
+</div>
+<table class="w-full text-sm md:text-base">
+<thead>
+<tr class="border-b">
+<th class="text-left p-2">Time</th>
+<th class="text-left p-2">Camera</th>
+<th class="text-left p-2">People</th>
+<th class="text-left p-2">Level</th>
+</tr>
+</thead>
+<tbody id="historyTable">
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ANALYTICS -->
+<section id="analytics" class="section hidden">
+<h3 class="text-2xl font-bold mb-4 text-white">Analytics</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+<div class="bg-white p-4 md:p-6 rounded-xl shadow">
+<canvas id="crowdChart"></canvas>
+</div>
+<div class="bg-white p-4 md:p-6 rounded-xl shadow">
+<canvas id="alertChart"></canvas>
+</div>
+</div>
+</section>
+
+<section id="settings" class="section hidden">
+
+  <div class="bg-white p-6 rounded-xl shadow max-w-xl space-y-4">
+
+    <!-- ALL your settings content -->
+     <!-- SETTINGS -->
+<div class="bg-white p-6 rounded-xl shadow max-w-xl space-y-4">
+
+<h3 class="text-xl font-bold">System Configuration</h3>
+
+<!-- DISPLAY MODE -->
+<div id="settingsView" class="bg-gray-100 p-3 rounded space-y-2">
+
+<p><b>Camera Count:</b> <span id="camCountDisplay"></span></p>
+
+<div>
+  <p class="font-semibold">Camera IPs:</p>
+  <div id="ipList" class="text-sm text-gray-600"></div>
+</div>
+
+<p><b>Crowd Limit:</b> <span id="limitDisplay"></span></p>
+
+<div>
+  <p class="font-semibold">Telegram Bots:</p>
+  <div id="botList" class="text-sm text-gray-600"></div>
+</div>
+
+<button onclick="enableEdit()" class="bg-blue-600 text-white px-4 py-2 rounded">
+Edit
+</button>
+
+</div>
+
+<!-- EDIT MODE -->
+<div id="settingsEdit" class="hidden space-y-3">
+
+<input type="number" id="editLimit" class="w-full border p-2 rounded" placeholder="Crowd Limit">
+
+<div id="editIPs"></div>
+<div id="editBots"></div>
+
+<div class="flex gap-2">
+<button onclick="saveSettings()" class="bg-green-600 text-white px-4 py-2 rounded">Save</button>
+<button onclick="cancelEdit()" class="bg-gray-400 text-white px-4 py-2 rounded">Cancel</button>
+</div>
+
+</div>
+
+</div>
+
+  </div>
+
+</section>
+
+
+
+<!-- PROFILE -->
+<section id="profile" class="section hidden">
+<h3 class="text-2xl font-bold mb-4 text-white">User Profile</h3>
+<div class="bg-white p-4 md:p-6 rounded-xl shadow max-w-md">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-4">
+<div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold" id="profileInitial">A</div>
+<div>
+<p id="displayName" class="font-bold text-lg">Admin User</p>
+<p id="displayEmail" class="text-gray-500 text-sm">admin@safeye.com</p>
+<p id="displayRole" class="text-gray-500 text-sm">System Administrator</p>
+</div>
+</div>
+<button class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition" onclick="openProfileModal()">Edit Profile</button>
+</div>
+<button class="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition w-full" onclick="logout()">Logout</button>
+</div>
+</section>
+
+<!-- Profile Edit Modal -->
+<div id="profileModal" class="fixed inset-0 bg-black/50 flex items-center justify-center hidden">
+<div class="bg-white rounded-xl p-6 w-11/12 max-w-md relative">
+<h3 class="text-xl font-bold mb-4">Edit Profile</h3>
+<form id="profileForm" class="space-y-4">
+<div>
+<label class="block font-semibold mb-1">Name</label>
+<input type="text" id="profileName" class="w-full border p-2 rounded" placeholder="Admin User">
+</div>
+<div>
+<label class="block font-semibold mb-1">Email</label>
+<input type="email" id="profileEmail" class="w-full border p-2 rounded" placeholder="admin@safeye.com">
+</div>
+<div>
+<label class="block font-semibold mb-1">Role</label>
+<input type="text" id="profileRole" class="w-full border p-2 rounded" placeholder="System Administrator">
+</div>
+<div class="flex justify-end gap-2 mt-2">
+<button type="button" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400" onclick="closeProfileModal()">Cancel</button>
+<button type="button" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" onclick="saveProfile()">Save</button>
+</div>
+</form>
+</div>
+</div>
+
+</main>
+<script>
+let lastAlertTime = 0
+const ALERT_INTERVAL = 30000   // 30 sec
+let frontendAlertCount = 0
+// SIDEBAR
+function showSection(id, el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.add('hidden'))
+  document.getElementById(id).classList.remove('hidden')
+
+  document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('bg-blue-600'))
+  if(el) el.classList.add('bg-blue-600')
+}
+
+// LOAD PROFILE
+function loadProfile(){
+
+  const email = localStorage.getItem("profileEmail")
+  const role = localStorage.getItem("profileRole")
+
+  if(email){
+    document.getElementById("displayEmail").innerText = email
+  }
+
+  if(role){
+    document.getElementById("displayRole").innerText = role
+    document.querySelector("header div").innerText = role
+  }
+
+}
+
+// LOAD SETTINGS (FULL)
+function loadSettingsDisplay(){
+
+  const ips = JSON.parse(localStorage.getItem("cameraIPs") || "[]")
+  const bots = JSON.parse(localStorage.getItem("bots") || "[]")
+  const limit = localStorage.getItem("limit") || 0
+
+  document.getElementById("camCountDisplay").innerText = ips.length
+  document.getElementById("limitDisplay").innerText = limit
+
+  // FULL IPs
+  let ipHTML = ""
+  ips.forEach((ip, i) => {
+    ipHTML += `<p>📷 Camera ${i+1}: ${ip}</p>`
+  })
+  document.getElementById("ipList").innerHTML = ipHTML
+
+  // FULL BOT DETAILS
+  let botHTML = ""
+  bots.forEach((b, i) => {
+    botHTML += `<p>🤖 Bot ${i+1}: Token (${b.token}) | Chat ID (${b.chat})</p>`
+  })
+  document.getElementById("botList").innerHTML = botHTML
+}
+function enableEdit(){
+
+  document.getElementById("settingsView").classList.add("hidden")
+  document.getElementById("settingsEdit").classList.remove("hidden")
+
+  const ips = JSON.parse(localStorage.getItem("cameraIPs") || "[]")
+  const bots = JSON.parse(localStorage.getItem("bots") || "[]")
+  const limit = localStorage.getItem("limit") || 0
+
+  document.getElementById("editLimit").value = limit
+
+  // EDIT IPs
+  let ipInputs = ""
+  ips.forEach((ip,i)=>{
+    ipInputs += `<input type="text" id="editIP${i}" value="${ip}" class="w-full border p-2 rounded mb-2">`
+  })
+  document.getElementById("editIPs").innerHTML = ipInputs
+
+  // EDIT BOTS
+  let botInputs = ""
+  bots.forEach((b,i)=>{
+    botInputs += `
+    <input type="text" id="editToken${i}" value="${b.token}" class="w-full border p-2 rounded mb-1" placeholder="Bot Token">
+    <input type="text" id="editChat${i}" value="${b.chat}" class="w-full border p-2 rounded mb-2" placeholder="Chat ID">
+    `
+  })
+  document.getElementById("editBots").innerHTML = botInputs
+}
+function saveSettings(){
+
+  const ips = JSON.parse(localStorage.getItem("cameraIPs") || "[]")
+  const bots = JSON.parse(localStorage.getItem("bots") || "[]")
+
+  let newIPs = []
+  let newBots = []
+
+  // GET UPDATED IPs
+  ips.forEach((_,i)=>{
+    newIPs.push(document.getElementById(`editIP${i}`).value)
+  })
+
+  // GET UPDATED BOTS
+  bots.forEach((_,i)=>{
+    newBots.push({
+      token: document.getElementById(`editToken${i}`).value,
+      chat: document.getElementById(`editChat${i}`).value
+    })
+  })
+
+  const newLimit = document.getElementById("editLimit").value
+
+  // SAVE BACK TO STORAGE
+  localStorage.setItem("cameraIPs", JSON.stringify(newIPs))
+  localStorage.setItem("bots", JSON.stringify(newBots))
+  localStorage.setItem("limit", newLimit)
+
+  // OPTIONAL: UPDATE BACKEND
+  fetch("http://localhost:5001/set_settings",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      limit:newLimit,
+      bot_token:newBots[0]?.token,
+      chat_id:newBots[0]?.chat
+    })
+  })
+
+  cancelEdit()
+  loadSettingsDisplay()
+}
+function cancelEdit(){
+  document.getElementById("settingsView").classList.remove("hidden")
+  document.getElementById("settingsEdit").classList.add("hidden")
+}
+// CAMERA LOAD
+function loadCameraFeeds(){
+  const count = parseInt(localStorage.getItem("cameraCount")||0)
+  const grid = document.getElementById("cameraGrid")
+  grid.innerHTML=""
+
+  for(let i=0;i<count;i++){
+    grid.innerHTML+=`
+    <div class="bg-black rounded-xl h-64 overflow-hidden">
+      <img src="http://127.0.0.1:5001/video/${i}?t=${Date.now()}" 
+      class="w-full h-full object-cover">
+    </div>`
+  }
+}
+
+// 🔥 HISTORY + COUNTS
+let previousCounts=[]
+function updateCounts(){
+  fetch("http://localhost:5001/counts")
+  .then(res=>res.json())
+  .then(data=>{
+
+    // ✅ DIRECT FROM BACKEND
+    document.getElementById("totalCrowd").innerText = data.total
+    document.getElementById("avgDensity").innerText = data.density
+    const currentTime = Date.now()
+
+if (data.density === "High" && (currentTime - lastAlertTime > ALERT_INTERVAL)) {
+    frontendAlertCount++
+    lastAlertTime = currentTime
+}
+
+document.getElementById("alertsCount").innerText = frontendAlertCount
+
+    // 🔥 HISTORY UPDATE
+    const counts = data.counts
+
+    counts.forEach((count,i)=>{
+
+      if(previousCounts[i]!==count){
+
+        const time=new Date().toLocaleTimeString()
+
+        document.getElementById("historyTable").innerHTML=
+        `<tr class="border-b bg-gray-50 hover:bg-gray-100 transition">
+  <td class="p-2 font-medium text-gray-700">${time}</td>
+  <td class="p-2 text-gray-800">Camera ${i+1}</td>
+  <td class="p-2 font-bold text-blue-600">${count}</td>
+  <td class="p-2 font-semibold ${
+    data.density==="High"?"text-red-600":
+    data.density==="Medium"?"text-yellow-600":
+    "text-green-600"
+  }">${data.density}</td>
+</tr>` 
+        + document.getElementById("historyTable").innerHTML
+
+      }
+
+    })
+
+    previousCounts=[...counts]
+
+    updateChart(data.total)
+
+  })
+}
+// 🔥 ANALYTICS (LIVE)
+let chartData=[]
+const ctx=document.getElementById("crowdChart")
+
+const crowdChart=new Chart(ctx,{
+  type:'line',
+  data:{
+    labels:[],
+    datasets:[{
+      label:'Crowd',
+      data:[],
+      borderColor:'cyan'
+    }]
+  }
+})
+
+function updateChart(total){
+  const time=new Date().toLocaleTimeString()
+
+  chartData.push(total)
+
+  crowdChart.data.labels.push(time)
+  crowdChart.data.datasets[0].data.push(total)
+
+  if(chartData.length>10){
+    crowdChart.data.labels.shift()
+    crowdChart.data.datasets[0].data.shift()
+  }
+
+  crowdChart.update()
+}
+
+// PROFILE
+function openProfileModal(){
+  document.getElementById("profileModal").classList.remove("hidden")
+}
+
+function closeProfileModal(){
+  document.getElementById("profileModal").classList.add("hidden")
+}
+
+function saveProfile(){
+  const email=document.getElementById("profileEmail").value
+  const role=document.getElementById("profileRole").value
+
+  localStorage.setItem("profileEmail",email)
+  localStorage.setItem("profileRole",role)
+
+  loadProfile()
+  closeProfileModal()
+}
+
+// LOGOUT
+function logout(){
+  window.location.href="login.html"
+}
+
+// FILTER
+function applyFilters(){
+  const cam=document.getElementById("filterCamera").value
+  const type=document.getElementById("filterType").value
+
+  document.querySelectorAll("#historyTable tr").forEach(row=>{
+    const c=row.cells[1].innerText
+    const t=row.cells[3].innerText
+
+    row.style.display =
+    ((cam===""||c===cam)&&(type===""||t===type))?"":"none"
+  })
+}
+
+// INIT
+window.onload=()=>{
+  loadCameraFeeds()
+  loadSettingsDisplay()
+  loadProfile()
+}
+
+setInterval(updateCounts,2000)
+
+</script>
+</body>
+</html>

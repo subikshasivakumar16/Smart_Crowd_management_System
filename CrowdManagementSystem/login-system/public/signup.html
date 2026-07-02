@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Signup</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="left">
+
+<h1>Create Account</h1>
+
+<form>
+<input type="email" id="email" placeholder="Email" required>
+
+<input type="password" id="password" placeholder="Password" required>
+
+<select id="role" required>
+<option value="">Select Role</option>
+<option value="admin">Admin</option>
+<option value="user">User</option>
+</select>
+
+<button type="button" onclick="signup()">Signup</button>
+
+<p class="link">Already have account? <a href="login.html">Login</a></p>
+
+</form>
+
+</div>
+
+
+<div class="right">
+<img src="bg.png">
+</div>
+
+</div>
+<script>
+
+async function signup(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+const role=document.getElementById("role").value
+
+const res=await fetch("/signup",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({email,password,role})
+})
+
+const data=await res.json()
+
+alert(data.message)
+
+}
+
+</script>
+</body>
+</html>

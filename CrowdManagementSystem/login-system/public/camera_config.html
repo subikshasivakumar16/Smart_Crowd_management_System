@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SafeEye Setup</title>
+
+<link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LEFT -->
+<div class="left">
+
+<div class="form-box">
+
+<h1>SafeEye Setup</h1>
+
+<div class="section">
+<select id="cameraCount" onchange="generateIPFields()">
+<option value="">Select Camera Count</option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="4">4</option>
+</select>
+</div>
+
+<div id="ipContainer" class="section"></div>
+
+<div class="section">
+<input type="number" id="crowdLimit" placeholder="Crowd Limit">
+</div>
+
+<div class="section">
+<select id="notifCount" onchange="generateTelegramFields()">
+<option value="0">No Notification</option>
+<option value="1">1 Bot</option>
+<option value="2">2 Bots</option>
+</select>
+</div>
+
+<div id="telegramFields" class="section"></div>
+
+<button onclick="submitConfig()">Start System</button>
+
+</div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+<img src="bg.png">
+</div>
+
+</div>
+
+<script>
+
+function generateIPFields(){
+  const count=document.getElementById("cameraCount").value
+  const container=document.getElementById("ipContainer")
+  container.innerHTML=""
+
+  for(let i=1;i<=count;i++){
+    container.innerHTML+=`
+    <input type="text" id="camera${i}" placeholder="Camera ${i} URL (/video)">
+    `
+  }
+}
+
+function generateTelegramFields(){
+  const count=document.getElementById("notifCount").value
+  const container=document.getElementById("telegramFields")
+  container.innerHTML=""
+
+  for(let i=1;i<=count;i++){
+    container.innerHTML+=`
+    <input type="text" id="bot${i}" placeholder="Bot Token ${i}">
+    <input type="text" id="chat${i}" placeholder="Chat ID ${i}">
+    `
+  }
+}
+async function submitConfig(){
+
+  try{
+
+    const camCount=document.getElementById("cameraCount").value
+    const limit=document.getElementById("crowdLimit").value
+    const notifCount=document.getElementById("notifCount").value
+
+    let ips=[]
+    let bots=[]
+
+    for(let i=1;i<=camCount;i++){
+      ips.push(document.getElementById(`camera${i}`).value)
+    }
+
+    for(let i=1;i<=notifCount;i++){
+      bots.push({
+        token:document.getElementById(`bot${i}`).value,
+        chat:document.getElementById(`chat${i}`).value
+      })
+    }
+
+    localStorage.setItem("cameraCount",camCount)
+    localStorage.setItem("cameraIPs", JSON.stringify(ips))
+    localStorage.setItem("limit", limit)
+    localStorage.setItem("bots", JSON.stringify(bots))
+    const res = await fetch("http://localhost:5001/set_cameras",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ips,limit,bots})
+    })
+
+    // 🔥 IMPORTANT CHECK
+    if(!res.ok){
+      throw new Error("Server error")
+    }
+
+    const data = await res.json()
+
+    alert("System Started")
+
+    // ✅ FORCE REDIRECT
+    window.location.href = "./dashboard.html"
+
+  }catch(err){
+    console.error(err)
+
+    // 🔥 EVEN IF BACKEND FAILS → STILL GO
+    alert("Server not responding, opening dashboard anyway")
+
+    window.location.href = "./dashboard.html"
+  }
+}
+</script>
+
+</body>
+</html>

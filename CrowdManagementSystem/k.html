@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+
+<title>SafeEye Dashboard</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body class="bg-gray-100 flex min-h-screen">
+
+<!-- Sidebar -->
+<aside class="w-64 bg-slate-900 text-white p-6 flex flex-col">
+
+<h1 class="text-2xl font-bold mb-10 text-blue-400">SafeEye</h1>
+
+<nav class="space-y-4">
+
+<a href="#" onclick="showSection('history')" class="block p-2 hover:bg-slate-800 rounded">History</a>
+
+<a href="#" onclick="showSection('video')" class="block p-2 hover:bg-slate-800 rounded">Video Feed</a>
+
+<a href="#" onclick="showSection('analytics')" class="block p-2 hover:bg-slate-800 rounded">Analytics</a>
+
+<a href="#" onclick="showSection('settings')" class="block p-2 hover:bg-slate-800 rounded">Settings</a>
+
+<a href="#" onclick="showSection('profile')" class="block p-2 hover:bg-slate-800 rounded">Profile</a>
+
+</nav>
+
+</aside>
+
+
+<!-- Main Content -->
+<main class="flex-1 p-8">
+
+<header class="flex justify-between items-center mb-8">
+
+<h2 class="text-2xl font-semibold">SafeEye Dashboard</h2>
+
+<div class="bg-white p-2 rounded shadow">Admin</div>
+
+</header>
+
+
+<!-- VIDEO FEED -->
+<section id="video" class="section">
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+<div class="bg-white p-6 rounded-lg shadow">
+<h3 class="font-bold">Total Crowd</h3>
+<p class="text-3xl mt-2 text-blue-500">124</p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow">
+<h3 class="font-bold">Avg Density</h3>
+<p class="text-3xl mt-2 text-green-500">Medium</p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow">
+<h3 class="font-bold">Alerts</h3>
+<p class="text-3xl mt-2 text-red-500">3</p>
+</div>
+
+</div>
+
+<div class="grid grid-cols-3 gap-6">
+
+<div class="col-span-2 bg-black rounded-lg h-96 flex items-center justify-center text-white text-xl">
+Live CCTV Feed
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow">
+
+<h3 class="font-bold mb-4">Recent Incidents</h3>
+
+<ul class="space-y-3">
+
+<li class="text-red-500">Crowd surge - 15:30</li>
+
+<li class="text-yellow-500">Unattended item - 14:15</li>
+
+<li class="text-blue-500">Suspicious activity - 13:45</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- HISTORY -->
+<section id="history" class="section hidden">
+
+<h3 class="text-xl font-bold mb-6">Incident History</h3>
+
+<div class="bg-white rounded shadow p-6">
+
+<table class="w-full">
+
+<thead>
+
+<tr class="border-b">
+
+<th class="text-left p-2">Time</th>
+<th class="text-left p-2">Camera</th>
+<th class="text-left p-2">Type</th>
+<th class="text-left p-2">Status</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr class="border-b">
+<td class="p-2">15:30</td>
+<td class="p-2">Gate 1</td>
+<td class="p-2 text-red-500">Crowd Surge</td>
+<td class="p-2">Resolved</td>
+</tr>
+
+<tr class="border-b">
+<td class="p-2">14:15</td>
+<td class="p-2">Parking</td>
+<td class="p-2 text-yellow-500">Unattended Bag</td>
+<td class="p-2">Investigating</td>
+</tr>
+
+<tr>
+<td class="p-2">13:45</td>
+<td class="p-2">Lobby</td>
+<td class="p-2 text-blue-500">Suspicious Activity</td>
+<td class="p-2">Closed</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+
+<!-- ANALYTICS -->
+<section id="analytics" class="section hidden">
+
+<h3 class="text-xl font-bold mb-6">Analytics</h3>
+
+<div class="grid grid-cols-2 gap-6">
+
+<div class="bg-white p-6 rounded shadow">
+<canvas id="crowdChart"></canvas>
+</div>
+
+<div class="bg-white p-6 rounded shadow">
+<canvas id="alertChart"></canvas>
+</div>
+
+</div>
+
+</section>
+
+
+
+<!-- SETTINGS -->
+<section id="settings" class="section hidden">
+
+<h3 class="text-xl font-bold mb-6">System Settings</h3>
+
+<div class="bg-white p-6 rounded shadow max-w-xl">
+
+<form class="space-y-4">
+
+<div>
+
+<label class="block font-semibold">Camera Name</label>
+
+<input type="text" class="w-full border p-2 rounded" placeholder="Camera 1">
+
+</div>
+
+<div>
+
+<label class="block font-semibold">Alert Sensitivity</label>
+
+<select class="w-full border p-2 rounded">
+
+<option>Low</option>
+
+<option>Medium</option>
+
+<option>High</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label class="block font-semibold">Notification Email</label>
+
+<input type="email" class="w-full border p-2 rounded" placeholder="admin@email.com">
+
+</div>
+
+<button class="bg-blue-600 text-white px-4 py-2 rounded">
+Save Settings
+</button>
+
+</form>
+
+</div>
+
+</section>
+
+
+
+<!-- PROFILE -->
+<section id="profile" class="section hidden">
+
+<h3 class="text-xl font-bold mb-6">User Profile</h3>
+
+<div class="bg-white p-6 rounded shadow max-w-md">
+
+<div class="flex items-center space-x-4 mb-6">
+
+<div class="w-16 h-16 bg-blue-500 rounded-full"></div>
+
+<div>
+
+<p class="font-bold">Admin User</p>
+
+<p class="text-gray-500">admin@safeye.com</p>
+
+</div>
+
+</div>
+
+<div class="space-y-3">
+
+<p><b>Role:</b> System Administrator</p>
+
+<p><b>Location:</b> Control Room</p>
+
+<p><b>Last Login:</b> Today 10:45 AM</p>
+
+</div>
+
+<button class="mt-6 bg-red-500 text-white px-4 py-2 rounded">
+Logout
+</button>
+
+</div>
+
+</section>
+
+
+</main>
+
+
+
+<script>
+
+function showSection(sectionId){
+
+document.querySelectorAll('.section').forEach(sec=>{
+sec.classList.add('hidden')
+})
+
+document.getElementById(sectionId).classList.remove('hidden')
+
+}
+
+</script>
+
+
+<script>
+
+const crowdChart = new Chart(document.getElementById('crowdChart'),{
+
+type:'line',
+
+data:{
+
+labels:['10AM','11AM','12PM','1PM','2PM','3PM'],
+
+datasets:[{
+
+label:'Crowd Density',
+
+data:[20,40,60,55,80,90],
+
+borderWidth:2
+
+}]
+
+}
+
+})
+
+
+const alertChart = new Chart(document.getElementById('alertChart'),{
+
+type:'bar',
+
+data:{
+
+labels:['Crowd','Suspicious','Objects'],
+
+datasets:[{
+
+label:'Alerts',
+
+data:[5,2,3],
+
+borderWidth:1
+
+}]
+
+}
+
+})
+
+</script>
+
+</body>
+</html>
