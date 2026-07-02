@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="left">
+
+<h1>Hello Again!</h1>
+<p>Login to your account</p>
+
+<form>
+<input type="email" id="email" placeholder="Email" required>
+
+<input type="password" id="password" placeholder="Password" required>
+
+<select id="role" required>
+<option value="">Select Role</option>
+<option value="admin">Admin</option>
+<option value="user">User</option>
+</select>
+
+<button type="button" onclick="login()">Sign In</button>
+
+<p class="link">Don't have account? <a href="signup.html">Signup</a></p>
+
+</form>
+
+</div>
+
+
+<div class="right">
+<img src="bg.png">
+</div>
+
+</div>
+<script>
+async function login(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+const role=document.getElementById("role").value   // ✅ ADD THIS
+
+const res=await fetch("/login",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({email,password})
+})
+
+const data=await res.json()
+
+if(data.message === "Login successful"){
+
+    // ✅ STORE DATA IN LOCALSTORAGE
+    localStorage.setItem("profileEmail", email)
+    localStorage.setItem("profileRole", role)
+
+    window.location.href = "camera_config.html"
+}else{
+    alert(data.message)
+}
+
+}
+</script>
+</body>
+</html>
