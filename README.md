@@ -1,1 +1,0 @@
-# Smart_Crowd_management_System
